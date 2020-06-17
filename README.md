@@ -10,3 +10,5 @@ A greeting slack bot, which takes in your name and say hello in general channel 
 ![3](https://github.com/tyclany/SlackGreetingBot/blob/master/3.png)
 4. You will see "Hello, ..." in the general channel.<br>
 ![4](https://github.com/tyclany/SlackGreetingBot/blob/master/4.png)
+## About this repository
+This repository consists of two lambda functions, which are deployed on aws server. greeting is used to handle slash command and sayHello is used to open the modal and print the greeting message. 
