@@ -2,15 +2,18 @@
 const request = require('request');
 const querystring = require('querystring');
 
+// token for bot to have access
 const SLACK_OAUTH_TOKEN = process.env.OAUTH_TOKEN
+
 const SUCCESS_RESPONSE = {
   statusCode: 200,
   body: null
 }
+// JSON for modal
 const modal = {
 	"title": {
 		"type": "plain_text",
-		"text": "My App",
+		"text": "Greeting bot",
 		"emoji": true
 	},
 	"submit": {
@@ -27,40 +30,43 @@ const modal = {
 	"blocks": [
 		{
 			"type": "input",
+			"block_id": "inputname",
 			"element": {
 				"type": "plain_text_input",
-				"action_id": "option_2",
+				"action_id": "name",
 				"placeholder": {
 					"type": "plain_text",
-					"text": "How many options do they need, really?"
+					"text": "What is your name"
 				}
 			},
 			"label": {
 				"type": "plain_text",
-				"text": "Option 2"
+				"text": "Name"
 			}
 		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"action_id": "add_option",
-					"text": {
-						"type": "plain_text",
-						"text": "Add another option  "
-					}
-				}
-			]
-		}
 	]
 }
-module.exports.modal = (event,context,callback) => {
-  const data = querystring.parse(event.body)
-  getRon(data,callback);
+module.exports.hello = (payload,context,callback) => {
+  // the payload is encoded in base64, convert it to string
+  let buff = new Buffer(payload.body, 'base64');
+  let text = buff.toString('ascii');
+  //use querystring to parse the string and use json to read specific field
+  const decoded = querystring.parse(text)
+  var obj = JSON.parse(decoded.payload)
+  // distinguish different type of responses. 
+  // Since have two types of operation, use if else. 
+  if(obj.type=='block_actions'){
+	openModal(obj.trigger_id,callback);
+  }
+  else{
+	var name = obj.view.state.values.inputname.name.value;
+	greetingWithName(name,callback);
+  }
+ 
 };
 
-function getRon(payload,callback) {
+function openModal(trigger_id,callback) {
+	//open modal, which takes in token, trigger_id and view.
     let options = {
         url: 'https://slack.com/api/views.open',
         headers: {
@@ -69,15 +75,36 @@ function getRon(payload,callback) {
         method: 'POST',
         form: {
           token: SLACK_OAUTH_TOKEN,
-          trigger_id: payload.trigger_id,
-          view: modal
+          trigger_id: trigger_id,
+          view: JSON.stringify(modal)
         }
-      }
-    
-      request(options, function(err, resp, body) {
-        console.log('error:', err)
-        console.log('statusCode:', resp && resp.statusCode)
-        console.log('body', body)
-      })
+    }
+	request(options, function(err, resp, body) {
+		console.log('error:', err)
+	    console.log('statusCode:', resp && resp.statusCode)
+	    console.log('body', body)
+	})
+    callback(null, SUCCESS_RESPONSE)
+}
+
+function greetingWithName(name,callback){
+	    //After receive the name, post message in general channel
+	    let options = {
+        url: 'https://slack.com/api/chat.postMessage',
+        headers: {
+          'Accept': 'application/json',
+        },
+        method: 'POST',
+        form: {
+          token: SLACK_OAUTH_TOKEN,
+          channel: 'general',
+          text: 'Hello, '+name,
+        }
+    }
+	request(options, function(err, resp, body) {
+		console.log('error:', err)
+	    console.log('statusCode:', resp && resp.statusCode)
+	    console.log('body', body)
+	})
     callback(null, SUCCESS_RESPONSE)
 }

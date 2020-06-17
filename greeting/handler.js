@@ -1,18 +1,20 @@
 'use strict';
 let request = require('request');
 
-const SLACK_OAUTH_TOKEN = process.env.OAUTH_TOKEN
+const SLACK_OAUTH_TOKEN = process.env.OAUTH_TOKEN 
+//OAUTH token to grant bot access to general channel
 const SUCCESS_RESPONSE = {
   statusCode: 200,
   body: null
 }
+//success response used in callback
 
 module.exports.hello = (event,context,callback) => {
-  console.log(event)
-  returnButton(callback);
+  showButton(callback);//show button in general channel
 };
 
-function returnButton(callback) {
+function showButton(callback) {
+  //url get from https://api.slack.com/methods/chat.postMessage
     let options = {
         url: 'https://slack.com/api/chat.postMessage',
         headers: {
@@ -30,7 +32,7 @@ function returnButton(callback) {
                 "type": "button",
                 "text": {
                     "type": "plain_text",
-                    "text": "Good Morning"
+                    "text": "Greeting Button"
                 },
               "value": "greeting",
               "action_id": "button_1"
@@ -38,7 +40,7 @@ function returnButton(callback) {
             }])
         }
       }
-    
+    //send the http request
       request(options, function(err, resp, body) {
         console.log('error:', err)
         console.log('statusCode:', resp && resp.statusCode)
